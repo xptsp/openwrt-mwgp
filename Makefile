@@ -10,37 +10,35 @@ PKG_SOURCE_URL:=https://github.com/apernet/mwgp
 PKG_SOURCE_VERSION:=bd3cbaa3b81f0b081c425de9ac15a54a6da5ef9a
 PKG_HASH:=296f66a2f1c9ce09eff1a8cb31b81f2dc0cb86a17836da69d897acf55fda7718
 
-PKG_LICENSE:=GPL-3.0-only
-PKG_LICENSE_FILES:=LICENSE
-PKG_MAINTAINER:=Your Name <your.email@example.com>
+PKG_MAINTAINER:=Apernet
+PKG_LICENSE:=GPL-3.0
 
 PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_BUILD_FLAGS:=no-mips16
-
-GO_PKG:=github.com/apernet/mwgp
-
 include $(INCLUDE_DIR)/package.mk
-include ../../lang/golang/golang-package.mk
+include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
 define Package/mwgp
-  SECTION:=net
-  CATEGORY:=Network
-  TITLE:=Multiple WireGuard Proxy
-  URL:=https://github.com/apernet/mwgp
+	SECTION:=net
+	CATEGORY:=Network
+	SUBMENU:=Web Servers/Proxies
+	TITLE:=Multiple WireGuard Proxy
+	URL:=https://github.com/apernet/mwgp
+	DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
 define Package/mwgp/description
-  mwgp (Multiple WireGuard Proxy) is a proxy designed to multiplex and accelerate WireGuard traffic.
+	A high-performance Multiple WireGuard Proxy server and client.
 endef
 
-#define Build/Compile
-	#GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o mwgp ./cmd/mwgp
-#endef
+define Build/Compile
+	GOOS=linux go build -ldflags "-s -w" -o mwgp ./cmd/mwgp
+endef
 
 define Package/mwgp/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/cmd/mwgp $(1)/usr/bin/
 endef
 
+$(eval $(call GoBinPackage,mwgp))
 $(eval $(call BuildPackage,mwgp))
+											  
