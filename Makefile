@@ -12,6 +12,11 @@ PKG_HASH:=296f66a2f1c9ce09eff1a8cb31b81f2dc0cb86a17836da69d897acf55fda7718
 
 PKG_MAINTAINER:=Apernet
 PKG_LICENSE:=GPL-3.0
+PKG_LICENSE_FILES:=LICENSE
+
+PKG_BUILD_DEPENDS:=golang/host
+PKG_BUILD_PARALLEL:=1
+PKG_USE_MIPS16:=0
 
 PKG_BUILD_DEPENDS:=golang/host
 include $(INCLUDE_DIR)/package.mk
@@ -20,25 +25,37 @@ include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 define Package/mwgp
 	SECTION:=net
 	CATEGORY:=Network
-	SUBMENU:=Web Servers/Proxies
+	SUBMENU:=VPN
 	TITLE:=Multiple WireGuard Proxy
 	URL:=https://github.com/apernet/mwgp
-	DEPENDS:=$(GO_ARCH_DEPENDS)
+	DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
 endef
 
 define Package/mwgp/description
-	A high-performance Multiple WireGuard Proxy server and client.
+	mwgp is a proxy software for WireGuard traffic that supports port 
+	multiplexing and experimental traffic obfuscation.
 endef
 
-define Build/Compile
-	GOOS=linux go build -ldflags "-s -w" -o mwgp ./cmd/mwgp
+# Use standard OpenWrt Go build parameters
+GO_PKG:=github.com/apernet/mwgp
+GO_PKG_BUILD_VARS:=CGO_ENABLED=0
+
+# --- Size Minimization Magic ---
+# -s: Omit the symbol table and debug information.
+# -w: Omit the DWARF symbol table.
+# -buildmode=pie: Generates position-independent executables if required.
+GO_PKG_LDFLAGS:=-s -w
+
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	$(CP) ./files/Makefile.project $(PKG_BUILD_DIR)/Makefile
 endef
 
 define Package/mwgp/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/cmd/mwgp $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/mwgp $(1)/usr/bin/mwgp
+	$(INSTALL_DIR) $(1)/etc/init.d/
+	$(INSTALL_BIN) ./files/mwgp.init $(1)/etc/init.d/mwgp
 endef
 
-$(eval $(call GoBinPackage,mwgp))
 $(eval $(call BuildPackage,mwgp))
-											  
